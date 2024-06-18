@@ -20,4 +20,11 @@ app.use(express.urlencoded({extended:true, limit:"16kb"}))
 app.use(express.static("public"))//Built-in Middleware
 app.use(cookieParser())//Third-Party Middleware
 
+
+
+// routes
+
+import { router } from "./routes/user.routes.js";
+app.use('/api/v1/users', router);
+
 export {app}

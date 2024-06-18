@@ -1,4 +1,4 @@
-import Recipe from "../models/recipe"
+import Recipe from "../models/recipe.js"
 
 // Add a new recipe
 exports.addRecipe = async (req, res) => {
@@ -12,7 +12,7 @@ exports.addRecipe = async (req, res) => {
   } catch (error) {
 
     res.status(500).json({ error: error.message });
-    
+
   }
 };
 
