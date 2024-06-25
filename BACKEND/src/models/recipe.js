@@ -1,4 +1,6 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
+
+const { Schema } = mongoose;
 
 const recipeSchema = new Schema(
   {
@@ -6,11 +8,14 @@ const recipeSchema = new Schema(
     description: { type: String, required: true },
     ingredients: [
       {
-        name: { type: String, required: true },
-        quantity: { type: String, required: true },
+        
+        name: { type: String, required: false },
+        quantity: { type: String, required: false },
       },
+      
     ],
     instructions: { type: String, required: true },
+    category:{ type: String ,required:true}, // -- for integration of AI
     cookingTime: { type: Number },
     difficulty: { type: String },
     cuisineType: { type: String },
@@ -24,4 +29,7 @@ const recipeSchema = new Schema(
   { timestamps: true }
 );
 
-export const Recipe=mongoose.model("Recipe",recipeSchema);
+
+const Recipe = mongoose.model("Recipe", recipeSchema);
+
+export default Recipe;

@@ -5,4 +5,5 @@ const commentSchema = new Schema({
   recipe: { type: Schema.Types.ObjectId, ref: 'Recipe', required: true }
 }, { timestamps: true });
 
+
 export const Comment=mongoose.model("Comment", commentSchema)

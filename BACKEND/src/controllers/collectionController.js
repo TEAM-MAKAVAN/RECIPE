@@ -1,22 +1,33 @@
 import { Collection } from "../models/collection.js";
 
 // Add a new collection
-exports.addCollection = async (req, res) => {
-  const { title, description, recipes, authorId } = req.body;
-
+// --vansh
+const addCollection = async (req, res) => {
+  const { title, description, recipes } = req.body;
+     authorId=req.user._id; // get author id from verify JWT 
   try {
-    const collection = new Collection({ title, description, recipes, author: authorId });
-    await collection.save();
-    
-    res.status(201).json(collection);
+    const collection = await  Collection.create({
+       title, 
+      description,
+       recipes, 
+       author: authorId });
+    if(!collection){
+      throw new ApiError(404, "Unable to Add Collection")
+    }
+
+     res.status(201).json(
+      new ApiResponse(201, collection, "Collection Added SuccessFully")
+     );
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
 // Get all collections
-exports.getCollections = async (req, res) => {
+//--vansh
+const getCollections = async (req, res) => {
   try {
+    // this is same as get recipes so i am not making any changes
     const collections = await Collection.find().populate('author', 'username profilePicture');
     res.status(200).json(collections);
   } catch (error) {
@@ -24,10 +35,11 @@ exports.getCollections = async (req, res) => {
   }
 };
 
-// Get a single collection
-exports.getCollection = async (req, res) => {
-  const { collectionId } = req.params;
 
+// get collection by enetring a collection Id   --vansh
+const getCollection = async (req, res) => {
+  const { collectionId } = req.query;
+ 
   try {
     const collection = await Collection.findById(collectionId).populate('author', 'username profilePicture').populate('recipes');
     if (!collection) {
@@ -40,8 +52,8 @@ exports.getCollection = async (req, res) => {
 };
 
 // Update a collection
-exports.updateCollection = async (req, res) => {
-  const { collectionId } = req.params;
+const updateCollection = async (req, res) => {
+  const { collectionId } = req.query;
   const { title, description, recipes } = req.body;
 
   try {
@@ -62,14 +74,14 @@ exports.updateCollection = async (req, res) => {
 };
 
 // Delete a collection
-exports.deleteCollection = async (req, res) => {
-  const { collectionId } = req.params;
+const deleteCollection = async (req, res) => {
+  const { collectionId } = req.query;
 
   try {
     const collection = await Collection.findByIdAndDelete(collectionId);
     
     if (!collection) {
-      return res.status(404).json({ message: 'Collection not found' });
+      return res.status(404).json({ message: 'Collection not found So unable to delete' });
     }
     
     res.status(200).json({ message: 'Collection deleted successfully' });
@@ -77,3 +89,11 @@ exports.deleteCollection = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+export { addCollection,
+  getCollection,
+  getCollections,
+  deleteCollection,
+  updateCollection
+}

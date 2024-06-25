@@ -3,63 +3,87 @@ import { ApiError } from "../utilities/ApiError.js";
 import { ApiResponse } from "../utilities/ApiResponse.js"
 import {
   uploadOnCloudinary,
+
   deleteFromCloudinary,
 } from "../utilities/Cloudinary.js";
 // Add a new recipe
-exports.addRecipe = async (req, res) => {
+
+
+
+export const addRecipe = async (req, res) => {
   const {
     title,
     description,
     ingredients,
     instructions,
+    category, // newly field Added  and required also
     cookingTime,
     difficulty,
     cuisineType,
     dietaryRestrictions,
-    authorId,
   } = req.body;
-  const imageLocalPath = req.files?.imageUrl.path;
 
-  if (!imageLocalPath) {
-    throw new ApiError(400, "Recipe image LocalPath  is required");
-  }
-  const recipeimage = await uploadOnCloudinary(imageLocalPath);
-
-  const videoLocalPath = req.files?.videoUrl.path;
-
-  if (!videoLocalPath) {
-    throw new ApiError(400, "Recipe video LocalPath  is required");
-  }
-  const recipeVideo = await uploadOnCloudinary(videoLocalPath);
-
+    if(!( title ||
+      description||
+      ingredients||
+      instructions||
+      category)){
+        throw new ApiError( 400, " Title Description Ingredients Instructions And Category are Required Field! please Enter All these info About Recipe!")
+      }
   try {
+    // Ensure image and video files are uploaded
+    const imageLocalPath = req.files['image'][0].path;
+    const videoLocalPath = req.files['video'][0].path
+
+    if (!imageLocalPath) {
+      throw new ApiError(400, "Recipe image is required");
+    }
+    if (!videoLocalPath) {
+      throw new ApiError(400, "Recipe video is required");
+    }
+
+    // Upload files to Cloudinary
+    const recipeImage = await uploadOnCloudinary(imageLocalPath);
+    const recipeVideo = await uploadOnCloudinary(videoLocalPath);
+
+    // Create a new recipe
     const recipe = new Recipe({
       title,
       description,
       ingredients,
       instructions,
+      category,
       cookingTime,
       difficulty,
       cuisineType,
       dietaryRestrictions,
-      author: authorId,
-      imageUrl: recipeimage.url,
+      author: req.user._id,
+      imageUrl: recipeImage.url,
       videoUrl: recipeVideo.url,
     });
+
+    // Save the recipe to the database
     await recipe.save();
 
+    // Send a successful response
     res.status(201).json(
-      ApiResponse(200,recipe,"Recipe Uploaded Successfully")
+     new ApiResponse(201, recipe, "Recipe uploaded successfully")
     );
   } catch (error) {
-    res.status(500).json(
-      ApiError(400, "Unable to upload the Recipe"));
+    console.error('Error uploading recipe:', error);
+
+    if (error instanceof ApiError) {
+      res.status(error.statusCode).json(new ApiResponse(error.statusCode, null, error.message));
+    } else {
+      res.status(500).json(new ApiResponse(500, null, "Unable to upload the recipe"));
+    }
   }
 };
 
 // Get all recipes
-exports.getRecipes = async (req, res) => {
+export const getRecipes = async (req, res) => {
   try {
+   
     const recipes = await Recipe.find().populate(
       "author",
       "username profilePicture"
@@ -71,8 +95,9 @@ exports.getRecipes = async (req, res) => {
 };
 
 // Get a single recipe
-exports.getRecipe = async (req, res) => {
-  const { recipeId } = req.params;
+export const getRecipe = async (req, res) => {
+  const { recipeId } = req.query;
+  console.log(req.query);
 
   try {
     const recipe = await Recipe.findById(recipeId)
