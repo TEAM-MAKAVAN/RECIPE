@@ -2,6 +2,7 @@ import express from "express";
 const app = express();
 
 app.use(express.json());
+
 import { Router } from "express";
 import verifyJWT from "../middlewares/auth.middleware.js";
 import { Subscription } from "../models/subscription.js";
@@ -14,7 +15,7 @@ SubsciptionRoutes.route('/toggleSubscription')
 
 
 
- SubsciptionRoutes.route('/getUserChannelSubscribers')
+ SubsciptionRoutes.route('/getUserChannelSubscribers/:channelId')
  .post(verifyJWT, getUserChannelSubscribers);
 
  SubsciptionRoutes.route('/getSubscribedChannels')

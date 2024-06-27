@@ -9,6 +9,7 @@ import { addComment, getComments} from "../controllers/commentController.js"
 
 const commentRoutes=Router()
 
+
 commentRoutes.route('/addComment')
  .post(verifyJWT, addComment);
 

@@ -1,4 +1,4 @@
-import { User } from "../models/user.js";
+import { User , TemporaryUser} from "../models/user.js";
 import { Subscription } from "../models/subscription.js";
 import * as bcrypt from 'bcrypt';
 // import bcrypt from "bcrypt";
@@ -12,6 +12,8 @@ import { ApiError } from "../utilities/ApiError.js";
 import { ApiResponse } from "../utilities/ApiResponse.js";
 // Import all exports from auth.middleware.js
 import * as AuthMiddleware from "../middlewares/auth.middleware.js";
+import crypto from "crypto";
+import sendEmail from '../utilities/sendEmail.js';
 
 
 
@@ -62,52 +64,125 @@ const generateAccessAndRefreshToken = async function (userId) {
 
 // Access the verifyJWT function from AuthMiddleware
 const { verifyJWT } = AuthMiddleware;
-
-// Register a new user
 const registerUser = async (req, res) => {
+  const { username, email, password, profilePicture } = req.body;
 
-  const { username, email, password } = req.body;
-  
+  const user = await User.findOne({ email });
+
+    if (user) {
+      return res.status(404).json({ message: "User is already registered" });
+    }
+
   if ([username, email, password].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "All Fields are required");
-
   }
-
-
-  const existedUser = await User.findOne({
-    $or: [{ username }, { email }],
-  });
-  if (existedUser) {
-    throw new ApiError(409, "User with this email or username already Existed");
-  }
-
-  const profilePictureLocalPath = req.file?.path;
-
-  if (!profilePictureLocalPath) {
-    throw new ApiError(400, "ProfilePicture LocalPath is required");
-  }
-
-  const profilePicture = await uploadOnCloudinary(profilePictureLocalPath);
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      email,
-      password: hashedPassword,
-      username: username.toLowerCase(),
-      profilePicture: profilePicture.url,
-    });
+    // Check if user already exists
+    let tempUser = await TemporaryUser.findOne({ email });
 
-    res.status(201).json(user);
+    if (tempUser) {
+      // If user already exists, update their details
+      const profilePictureLocalPath = req.file?.path;
+      if (!profilePictureLocalPath) {
+        throw new ApiError(400, "Profile Picture LocalPath is required");
+      }
+
+      const profilePictureUpload = await uploadOnCloudinary(profilePictureLocalPath);
+
+      const otp = crypto.randomBytes(3).toString('hex'); // Generate a 6-digit OTP
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update existing user's details
+      tempUser.username = username.toLowerCase();
+      tempUser.password = hashedPassword;
+      tempUser.profilePicture = profilePictureUpload.url;
+      tempUser.otp = otp;
+
+      await tempUser.save(); // Save updated user
+
+      await sendEmail(email, otp);
+
+      return res.status(200).json({ message: 'User details updated! Please check your email for the OTP.' });
+    } else {
+      // If user does not exist, create a new user
+      const profilePictureLocalPath = req.file?.path;
+      if (!profilePictureLocalPath) {
+        throw new ApiError(400, "Profile Picture LocalPath is required");
+      }
+
+      const profilePictureUpload = await uploadOnCloudinary(profilePictureLocalPath);
+      console.log(profilePictureUpload.url)
+
+      const otp = crypto.randomBytes(3).toString('hex'); // Generate a 6-digit OTP
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      tempUser = await TemporaryUser.create({
+        email,
+        username: username.toLowerCase(),
+        password: hashedPassword,
+        profilePicture: profilePictureUpload.url,
+        otp,
+      });
+
+
+      await sendEmail(email, otp);
+
+      return res.status(200).json({ message: 'Registration successful! Please check your email for the OTP.' });
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error registering or updating user:', error);
+    res.status(500).json({ message: 'Error registering or updating user. Please try again.' });
   }
 };
+
+
+
+//verify - otp
+// OTP verification route
+const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    // Find the user in temporary_users
+    const tempUser = await TemporaryUser.findOne({ email });
+
+    if (!tempUser) {
+      return res.status(400).json({ message: 'Invalid email. Please try again.' });
+    }
+
+    // Verify the OTP
+    if (tempUser.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+    }
+
+    // Move user data to users table
+    await User.create({
+      email: tempUser.email,
+      username: tempUser.username,
+      password: tempUser.password,
+      profilePicture: tempUser.profilePicture,
+    });
+
+    // Delete the temporary user entry
+    await TemporaryUser.findOneAndDelete({ email });
+
+    res.status(200).json({ message: 'OTP verification successful!' });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ message: 'Error verifying OTP. Please try again.' });
+  }
+}
+
+// login function
 
 const login = async (req, res) => {
   const { email, password } = req.body;
   // console.log(email);
   // console.log(password);
+
 
   try {
     const user = await User.findOne({ email });
@@ -183,6 +258,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 // Get user profile
 const getUserProfile = async (req, res) => {
+  // console.log(req)
   const { userId } = req.params;
 
   try {
@@ -436,6 +512,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 export {
   registerUser,
   login,
+  verifyOtp,
   //followUser,
   //unfollowUser,
   getUserProfile,

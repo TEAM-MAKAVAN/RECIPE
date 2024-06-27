@@ -1,1 +1,1 @@
-export const DB_NAME="recipeSharing"
+export const DB_NAME="recipesharing"

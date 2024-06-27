@@ -1,15 +1,21 @@
 import { Collection } from "../models/collection.js";
+import { ApiError } from "../utilities/ApiError.js";
+import { ApiResponse } from "../utilities/ApiResponse.js";
 
 // Add a new collection
 // --vansh
+
+// 
 const addCollection = async (req, res) => {
   const { title, description, recipes } = req.body;
-     authorId=req.user._id; // get author id from verify JWT 
+  // console.log(req.body);
+
+    const authorId=req.user._id; // get author id from verify JWT 
   try {
     const collection = await  Collection.create({
-       title, 
-      description,
-       recipes, 
+       title:title, 
+      description:description,
+       recipes:recipes, 
        author: authorId });
     if(!collection){
       throw new ApiError(404, "Unable to Add Collection")
@@ -19,8 +25,8 @@ const addCollection = async (req, res) => {
       new ApiResponse(201, collection, "Collection Added SuccessFully")
      );
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    res.status(500).json({ error: error.message });
+  }
 };
 
 // Get all collections
@@ -39,6 +45,7 @@ const getCollections = async (req, res) => {
 // get collection by enetring a collection Id   --vansh
 const getCollection = async (req, res) => {
   const { collectionId } = req.query;
+ 
  
   try {
     const collection = await Collection.findById(collectionId).populate('author', 'username profilePicture').populate('recipes');

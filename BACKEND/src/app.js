@@ -16,6 +16,7 @@ app.use(cors({
 
 
 //app.use(express.json({limit:"16kb"}))//Built-in Middleware
+app.use(express.json())
 app.use(express.urlencoded({extended:true, limit:"16kb"}))
 app.use(express.static("public"))//Built-in Middleware
 app.use(cookieParser())//Third-Party Middleware

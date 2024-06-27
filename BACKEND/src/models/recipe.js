@@ -15,9 +15,10 @@ const recipeSchema = new Schema(
       
     ],
     instructions: { type: String, required: true },
-    category:{ type: String ,required:true}, // -- for integration of AI
+    category:{ type: String ,required:false}, // -- for integration of AI
     cookingTime: { type: Number },
     difficulty: { type: String },
+    
     cuisineType: { type: String },
     dietaryRestrictions: [String],
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },

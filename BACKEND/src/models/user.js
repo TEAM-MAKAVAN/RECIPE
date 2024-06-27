@@ -65,4 +65,24 @@ userSchema.methods.generateRefreshToken = async function () {
 
 
 
+// Temporary User Schema
+const temporaryUserSchema = new Schema(
+  {
+    email: { type: String, required: true, unique: true },
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+    profilePicture: { type: Buffer },
+    otp: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+  }
+);
+
+temporaryUserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+export const TemporaryUser = mongoose.model("TemporaryUser", temporaryUserSchema);
+
 export const User=mongoose.model("User",userSchema);

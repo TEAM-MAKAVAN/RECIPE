@@ -5,6 +5,8 @@ import verifyJWT from '../middlewares/auth.middleware.js';
 const recipeRouter = Router();
 
 
+
+
 // ROUTE FOR UPLOADING NEW RECIPE
 // succesfully checked
 recipeRouter.route('/recipe_upload')
@@ -14,7 +16,7 @@ recipeRouter.route('/recipe_upload')
 // ROUTE TO GET ALL RECIPES
 // succesfully checked
 recipeRouter.route('/getrecipes')
- .post(verifyJWT, getRecipes);
+ .get(verifyJWT, getRecipes);
 
 
  // ROUTE TO GET SINGLE RECIPE

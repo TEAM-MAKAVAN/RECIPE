@@ -3,12 +3,9 @@ import { ApiError } from "../utilities/ApiError.js";
 import { ApiResponse } from "../utilities/ApiResponse.js"
 import {
   uploadOnCloudinary,
-
   deleteFromCloudinary,
 } from "../utilities/Cloudinary.js";
 // Add a new recipe
-
-
 
 export const addRecipe = async (req, res) => {
   const {
@@ -79,25 +76,26 @@ export const addRecipe = async (req, res) => {
     }
   }
 };
-
-// Get all recipes
+// Get all recipes // TOTAL RECIPES UPLAODED :- MAIN HOME PAGE
 export const getRecipes = async (req, res) => {
+  
   try {
    
     const recipes = await Recipe.find().populate(
       "author",
       "username profilePicture"
     );
+    console.log(recipes);
     res.status(200).json(recipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Get a single recipe
+// Get a single recipe     RECIPE FIND
 export const getRecipe = async (req, res) => {
   const { recipeId } = req.query;
-  console.log(req.query);
+  ;
 
   try {
     const recipe = await Recipe.findById(recipeId)
