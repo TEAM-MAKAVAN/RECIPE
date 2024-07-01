@@ -9,7 +9,7 @@ import { addLike, getLikes } from "../controllers/likeController.js";
 
 const LikeRoutes=Router()
 
-LikeRoutes.route('/addLikes')
+LikeRoutes.route('/addLikes/:recipeId')
  .post(verifyJWT, addLike);
 
 

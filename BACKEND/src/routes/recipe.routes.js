@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addRecipe, getRecipe, getRecipes } from '../controllers/recipeController.js';
+import { addRecipe, getRecipe, getRecipes ,fetchSavedRecipes} from '../controllers/recipeController.js';
 import { uploadImage} from '../middlewares/multer.js'; // Import the multer upload middleware
 import verifyJWT from '../middlewares/auth.middleware.js';
 const recipeRouter = Router();
@@ -23,6 +23,10 @@ recipeRouter.route('/getrecipes')
  // successfully checked
  recipeRouter.route('/getsinglerecipe')
  .post(verifyJWT, getRecipe);
+
+
+ recipeRouter.route('/saved-recipes/:userId')
+ .post(verifyJWT,fetchSavedRecipes);
 
  
 export { recipeRouter };

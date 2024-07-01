@@ -5,4 +5,5 @@ const likeSchema = new Schema({
   recipe: { type: Schema.Types.ObjectId, ref: 'Recipe', required: true }
 }, { timestamps: true });
 
+
 export const Like = mongoose.model('Like', likeSchema);

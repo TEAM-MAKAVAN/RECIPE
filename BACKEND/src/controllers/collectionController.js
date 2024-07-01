@@ -6,12 +6,14 @@ import { ApiResponse } from "../utilities/ApiResponse.js";
 // --vansh
 
 // 
+
 const addCollection = async (req, res) => {
   const { title, description, recipes } = req.body;
   // console.log(req.body);
 
     const authorId=req.user._id; // get author id from verify JWT 
   try {
+
     const collection = await  Collection.create({
        title:title, 
       description:description,
