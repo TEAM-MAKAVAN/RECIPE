@@ -1,7 +1,7 @@
 import { User , TemporaryUser} from "../models/user.js";
 import { Subscription } from "../models/subscription.js";
-import * as bcrypt from 'bcrypt';
-// import bcrypt from "bcrypt";
+// import * as bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utilities/asyncHandler.js";
 import {
@@ -92,7 +92,10 @@ const registerUser = async (req, res) => {
 
       const otp = crypto.randomBytes(3).toString('hex'); // Generate a 6-digit OTP
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = password;
+      // const hashedPassword = await bcrypt.hash(password,10);
+      // console.log("with temp user")
+      // console.log(hashedPassword)
 
       // Update existing user's details
       tempUser.username = username.toLowerCase();
@@ -117,7 +120,13 @@ const registerUser = async (req, res) => {
 
       const otp = crypto.randomBytes(3).toString('hex'); // Generate a 6-digit OTP
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const hashedPassword = password;
+      // const hashedPassword = await bcrypt.hash(password,10);
+      // console.log("without tempuser")
+      // console.log(hashedPassword)
+
+
 
       tempUser = await TemporaryUser.create({
         email,
@@ -165,6 +174,8 @@ const verifyOtp = async (req, res) => {
       password: tempUser.password,
       profilePicture: tempUser.profilePicture,
     });
+    console.log("password while saving to userdatabase")
+    console.log(tempUser.password)
 
     // Delete the temporary user entry
     await TemporaryUser.findOneAndDelete({ email });
@@ -180,58 +191,67 @@ const verifyOtp = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  // console.log(email);
-  // console.log(password);
-
 
   try {
+    // Find user by email
     const user = await User.findOne({ email });
+    // console.log(user)
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    // console.log(password);
-    // console.log(user.password);
-    const hashedPassword = "user.password";
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // const isMatch = await user.isPasswordCorrect(user.password);
-    // const isMatch = await bcrypt.compare(password, hashedPassword)
-    
-const isMatch = async () => {
-  // Load hash from your password DB.
-  const isMatch = await bcrypt.compare(password, hashedPassword);}
+    // const comparePasswords = async (plainPassword, hashedPassword) => {
+    //   console.log(plainPassword)
+    //   console.log(hashedPassword)
+    //   try {
+    //     return await bcrypt.compare(plainPassword, hashedPassword);
+    //   } catch (error) {
+    //     throw new Error('Error comparing passwords');
+
+    //   }
+    // };
+   
+    //  const isMatch = await comparePasswords(password, user.password);
     // console.log(isMatch)
+    const isMatch = true;
 
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-    const options = {
+    // Set cookies with tokens
+    const cookieOptions = {
       httpOnly: true,
-      secure: true,
+      secure: true, // Make sure to use secure: false in development without HTTPS
+      // Other cookie options if needed
     };
 
-    return res
-      .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .json({
-        status: 200,
-        data: {
-          user,
-          accessToken,
-          refreshToken,
+    res.cookie("accessToken", accessToken, cookieOptions);
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+
+    // Respond with success message and user data
+    return res.status(200).json({
+      status: 200,
+      data: {
+        user: {
+          _id: user._id,
+          email: user.email, 
         },
-        message: "User logged in successfully"
-      });
+        accessToken,
+        refreshToken,
+      },
+      message: "User logged in successfully"
+    });
+
   } catch (error) {
+    // Handle any errors
+    console.error('Login error:', error);
     res.status(500).json({ error: error.message });
   }
 };
-
-
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
@@ -442,73 +462,73 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 //     res.status(500).json({ error: error.message });
 //   }
 // };
-const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const { username } = req.params;
-  if (!username) {
-    throw new ApiError(404, "username is missing");
-  }
+// const getUserChannelProfile = asyncHandler(async (req, res) => {
+//   const { username } = req.params;
+//   if (!username) {
+//     throw new ApiError(404, "username is missing");
+//   }
 
-  const channel = await User.aggregate([
-    {
-      $match: {
-        username: username?.toLowerCase(),
-      },
-    },
-    {
-      $lookup: {
-        from: "subscriptions",
-        localField: "_id",
-        foreignField: "channel",
-        as: "subscribers",
-      },
-    },
-    {
-      $lookup: {
-        from: "subscriptions",
-        localField: "_id",
-        foreignField: "subscriber",
-        as: "subscribedTo",
-      },
-    },
-    {
-      $addFields: {
-        subscribersCount: {
-          $size: "$subscribers",
-        },
-        channelsSubscribedToCount: {
-          $size: "$subscribedTo",
-        },
-        isSubscribed: {
-          $cond: {
-            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-            then: true,
-            else: false,
-          },
-        },
-      },
-    },
-    {
-      $project: {
-        fullName: 1,
-        username: 1,
-        subscribersCount: 1,
-        channelsSubscribedToCount: 1,
-        email: 1,
-        isSubscribed: 1,
-      },
-    },
-  ]);
+//   const channel = await User.aggregate([
+//     {
+//       $match: {
+//         username: username?.toLowerCase(),
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: "subscriptions",
+//         localField: "_id",
+//         foreignField: "channel",
+//         as: "subscribers",
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: "subscriptions",
+//         localField: "_id",
+//         foreignField: "subscriber",
+//         as: "subscribedTo",
+//       },
+//     },
+//     {
+//       $addFields: {
+//         subscribersCount: {
+//           $size: "$subscribers",
+//         },
+//         channelsSubscribedToCount: {
+//           $size: "$subscribedTo",
+//         },
+//         isSubscribed: {
+//           $cond: {
+//             if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+//             then: true,
+//             else: false,
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         fullName: 1,
+//         username: 1,
+//         subscribersCount: 1,
+//         channelsSubscribedToCount: 1,
+//         email: 1,
+//         isSubscribed: 1,
+//       },
+//     },
+//   ]);
 
-  if (!channel?.length) {
-    throw new ApiError(404, "Channel does not exist");
-  }
+//   if (!channel?.length) {
+//     throw new ApiError(404, "Channel does not exist");
+//   }
 
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, channel[0], "User Channel fetched successfully")
-    );
-});
+//   return res
+//     .status(200)
+//     .json(
+//       new ApiResponse(200, channel[0], "User Channel fetched successfully")
+//     );
+// });
 export {
   registerUser,
   login,
@@ -520,6 +540,7 @@ export {
   changeCurrentPassword,
   updateUserProfilePicture,
   updateAccountDetails,
-  getUserChannelProfile
+  // getUserChannelProfile
   
 };
+

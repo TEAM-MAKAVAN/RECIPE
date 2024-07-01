@@ -1,4 +1,5 @@
 import Recipe from "../models/recipe.js";
+import { User } from "../models/user.js";
 import { ApiError } from "../utilities/ApiError.js";
 import { ApiResponse } from "../utilities/ApiResponse.js"
 import {
@@ -83,7 +84,7 @@ export const getRecipes = async (req, res) => {
    
     const recipes = await Recipe.find().populate(
       "author",
-      "username profilePicture"
+     
     );
     console.log(recipes);
     res.status(200).json(recipes);
@@ -106,6 +107,28 @@ export const getRecipe = async (req, res) => {
       return res.status(404).json({ message: "Recipe not found" });
     }
     res.status(200).json(recipe);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Fetch saved recipes for a user
+export const fetchSavedRecipes = async (req, res) => {
+  const userId = req.params.userId; // Assuming userId is passed as a route parameter
+
+  try {
+    // Find the user by userId and populate the savedRecipes array
+    const user = await User.findById(userId).populate('savedRecipes');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Extract the populated recipes from user's savedRecipes
+    const savedRecipes = user.savedRecipes;
+    console.log(savedRecipes)
+
+    res.status(200).json(savedRecipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

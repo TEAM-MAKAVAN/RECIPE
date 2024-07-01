@@ -17,7 +17,7 @@ const userSchema = new Schema(
     refreshToken: [{
       type: String,
     }],
-    author: [{ type: Schema.Types.ObjectId,ref: "Recipe"}],
+    author: [{ type: Schema.Types.ObjectId }],
     isVerified:{ type:Boolean, default:false},
     
   },

@@ -5,6 +5,11 @@ import Register from "./components/Register.jsx";
 import Login from "./components/Login.jsx"
 import Profile from "./components/Profile.jsx";
 import MainHomePage from "./components/MainHomePage.jsx";
+import SavedRecipes from "./components/SavedRecipes.jsx";
+import AuthorProfile from "./components/Authorprofile.jsx"
+import Trial from "./components/Trial.jsx";
+import './App.css'; 
+
 const App = () =>{
 return <>
     <BrowserRouter>
@@ -15,7 +20,10 @@ return <>
    <Route path="/login" element={<Login />} />
    <Route path="/Profile" element={<Profile />} />
    <Route path="/MainHomePage" element = {<MainHomePage />} />
-   </Routes>
+   <Route path="/savedRecipes" element = {<SavedRecipes />} />
+   <Route path="/authorprofile/:authorId" element={<AuthorProfile />} />
+   <Route path="/trial" element={<Trial />} />
+      </Routes>
 
     </BrowserRouter>
 </>

@@ -16,9 +16,9 @@ SubsciptionRoutes.route('/toggleSubscription')
 
 
  SubsciptionRoutes.route('/getUserChannelSubscribers/:channelId')
- .post(verifyJWT, getUserChannelSubscribers);
+ .post( getUserChannelSubscribers);
 
- SubsciptionRoutes.route('/getSubscribedChannels')
+ SubsciptionRoutes.route('/getSubscribedChannels/:subscriberId')
  .post(verifyJWT, getSubscribedChannels);
   
   

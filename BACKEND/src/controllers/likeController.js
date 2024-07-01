@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 const addLike = async (req, res) => {
   const recipeId = req.query.recipeId; // Assuming recipeId is passed as a query parameter
   const authorId = req.user._id; // Assuming req.user is set by your authentication middleware
-
+console.log("hello from like controlller")
   try {
     
     // Convert recipeId to ObjectId
